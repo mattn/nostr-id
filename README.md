@@ -14,7 +14,7 @@ ec42c765418b3db9c85abff3a88f4a3bbe57535eebbdc54522041fa5328c0600
 Encode hex public key to npub
 
 ```
-$ nostr-id -t note ec42c765418b3db9c85abff3a88f4a3bbe57535eebbdc54522041fa5328c0600
+$ nostr-id ec42c765418b3db9c85abff3a88f4a3bbe57535eebbdc54522041fa5328c0600
 npub1a3pvwe2p3v7mnjz6hle63r628wl9w567aw7u23fzqs062v5vqcqqu3sgh3
 ```
 
