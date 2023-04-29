@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -10,72 +11,104 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func showEncode(s string, err error) {
-	if err == nil {
-		fmt.Println(s)
-	} else {
-		log.Println(err)
-	}
-}
-
-func showDecode(s string) {
+func decode(out io.Writer, s string) {
 	if _, vv, err := nip19.Decode(s); err == nil {
-		fmt.Println(vv)
+		fmt.Fprintln(out, vv)
 	} else {
 		log.Println(err)
 	}
 }
 
-func convertNote(cCtx *cli.Context) error {
-	for _, arg := range cCtx.Args().Slice() {
+func ConvertNote(cCtx *cli.Context) error {
+	return convertNote(os.Stdout, cCtx.Args().Slice())
+}
+
+func convertNote(out io.Writer, args []string) error {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "note") {
-			showDecode(arg)
+			decode(out, arg)
 		} else {
-			showEncode(nip19.EncodeNote(arg))
+			v, err := nip19.EncodeNote(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
 		}
 	}
 	return nil
 }
 
-func convertPublicKey(cCtx *cli.Context) error {
-	for _, arg := range cCtx.Args().Slice() {
+func ConvertPublicKey(cCtx *cli.Context) error {
+	return convertPublicKey(os.Stdout, cCtx.Args().Slice())
+}
+
+func convertPublicKey(out io.Writer, args []string) error {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "npub") {
-			showDecode(arg)
+			decode(out, arg)
 		} else {
-			showEncode(nip19.EncodePublicKey(arg))
+			v, err := nip19.EncodePublicKey(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
 		}
 	}
 	return nil
 }
 
-func convertPrivateKey(cCtx *cli.Context) error {
-	for _, arg := range cCtx.Args().Slice() {
+func ConvertPrivateKey(cCtx *cli.Context) error {
+	return convertPrivateKey(os.Stdout, cCtx.Args().Slice())
+}
+
+func convertPrivateKey(out io.Writer, args []string) error {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "nsec") {
-			showDecode(arg)
+			decode(out, arg)
 		} else {
-			showEncode(nip19.EncodePrivateKey(arg))
+			v, err := nip19.EncodePrivateKey(arg)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
 		}
 	}
 	return nil
 }
 
-func convertProfile(cCtx *cli.Context) error {
-	for _, arg := range cCtx.Args().Slice() {
+func ConvertProfile(cCtx *cli.Context) error {
+	return convertProfile(os.Stdout, cCtx.Args().Slice(), cCtx.StringSlice("relay"))
+}
+
+func convertProfile(out io.Writer, args []string, relays []string) error {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "nprofile") {
-			showDecode(arg)
+			decode(out, arg)
 		} else {
-			showEncode(nip19.EncodeProfile(arg, cCtx.StringSlice("relay")))
+			v, err := nip19.EncodeProfile(arg, relays)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
 		}
 	}
 	return nil
 }
 
-func convertEvent(cCtx *cli.Context) error {
-	for _, arg := range cCtx.Args().Slice() {
+func ConvertEvent(cCtx *cli.Context) error {
+	return convertEvent(os.Stdout, cCtx.Args().Slice(), cCtx.StringSlice("relay"), cCtx.String("author"))
+}
+
+func convertEvent(out io.Writer, args []string, relays []string, author string) error {
+	for _, arg := range args {
 		if strings.HasPrefix(arg, "nevent") {
-			showDecode(arg)
+			decode(out, arg)
 		} else {
-			showEncode(nip19.EncodeEvent(arg, cCtx.StringSlice("relay"), cCtx.String("author")))
+			v, err := nip19.EncodeEvent(arg, relays, author)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
 		}
 	}
 	return nil
@@ -87,22 +120,22 @@ func main() {
 			{
 				Name:   "note",
 				Usage:  "convert note/hex",
-				Action: convertNote,
+				Action: ConvertNote,
 			},
 			{
 				Name:   "npub",
 				Usage:  "convert npub/hex",
-				Action: convertPublicKey,
+				Action: ConvertPublicKey,
 			},
 			{
 				Name:   "nsec",
 				Usage:  "convert nsec/hex",
-				Action: convertPrivateKey,
+				Action: ConvertPrivateKey,
 			},
 			{
 				Name:   "nprofile",
 				Usage:  "convert nprofile/hex",
-				Action: convertProfile,
+				Action: ConvertProfile,
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name: "relay",
@@ -120,7 +153,7 @@ func main() {
 						Name: "author",
 					},
 				},
-				Action: convertEvent,
+				Action: ConvertEvent,
 			},
 		},
 	}
