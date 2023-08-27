@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"log"
@@ -19,8 +20,20 @@ func decode(out io.Writer, s string) {
 	}
 }
 
+func argsOrStdinLines(cCtx *cli.Context) []string {
+	if cCtx.Args().Present() {
+		return cCtx.Args().Slice()
+	}
+	var ret []string
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		ret = append(ret, scanner.Text())
+	}
+	return ret
+}
+
 func ConvertNote(cCtx *cli.Context) error {
-	return convertNote(os.Stdout, cCtx.Args().Slice())
+	return convertNote(os.Stdout, argsOrStdinLines(cCtx))
 }
 
 func convertNote(out io.Writer, args []string) error {
@@ -39,7 +52,7 @@ func convertNote(out io.Writer, args []string) error {
 }
 
 func ConvertPublicKey(cCtx *cli.Context) error {
-	return convertPublicKey(os.Stdout, cCtx.Args().Slice())
+	return convertPublicKey(os.Stdout, argsOrStdinLines(cCtx))
 }
 
 func convertPublicKey(out io.Writer, args []string) error {
@@ -58,7 +71,7 @@ func convertPublicKey(out io.Writer, args []string) error {
 }
 
 func ConvertPrivateKey(cCtx *cli.Context) error {
-	return convertPrivateKey(os.Stdout, cCtx.Args().Slice())
+	return convertPrivateKey(os.Stdout, argsOrStdinLines(cCtx))
 }
 
 func convertPrivateKey(out io.Writer, args []string) error {
@@ -77,7 +90,7 @@ func convertPrivateKey(out io.Writer, args []string) error {
 }
 
 func ConvertProfile(cCtx *cli.Context) error {
-	return convertProfile(os.Stdout, cCtx.Args().Slice(), cCtx.StringSlice("relay"))
+	return convertProfile(os.Stdout, argsOrStdinLines(cCtx), cCtx.StringSlice("relay"))
 }
 
 func convertProfile(out io.Writer, args []string, relays []string) error {
@@ -96,7 +109,7 @@ func convertProfile(out io.Writer, args []string, relays []string) error {
 }
 
 func ConvertEvent(cCtx *cli.Context) error {
-	return convertEvent(os.Stdout, cCtx.Args().Slice(), cCtx.StringSlice("relay"), cCtx.String("author"))
+	return convertEvent(os.Stdout, argsOrStdinLines(cCtx), cCtx.StringSlice("relay"), cCtx.String("author"))
 }
 
 func convertEvent(out io.Writer, args []string, relays []string, author string) error {
