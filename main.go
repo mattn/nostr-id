@@ -14,7 +14,7 @@ import (
 
 func decode(out io.Writer, s string) {
 	if _, vv, err := nip19.Decode(s); err == nil {
-		fmt.Fprintln(out, vv)
+		fmt.Fprintf(out, "%+v\n", vv)
 	} else {
 		log.Println(err)
 	}
@@ -127,6 +127,25 @@ func convertEvent(out io.Writer, args []string, relays []string, author string) 
 	return nil
 }
 
+func ConvertAddr(cCtx *cli.Context) error {
+	return convertAddr(os.Stdout, argsOrStdinLines(cCtx), cCtx.Int("kind"), cCtx.String("author"), cCtx.StringSlice("relay"))
+}
+
+func convertAddr(out io.Writer, args []string, kind int, author string, relays []string) error {
+	for _, arg := range args {
+		if strings.HasPrefix(arg, "naddr") {
+			decode(out, arg)
+		} else {
+			v, err := nip19.EncodeEntity(author, kind, arg, relays)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Fprintln(out, v)
+		}
+	}
+	return nil
+}
+
 func main() {
 	app := &cli.App{
 		Commands: []*cli.Command{
@@ -167,6 +186,19 @@ func main() {
 					},
 				},
 				Action: ConvertEvent,
+			},
+			{
+				Name:  "naddr",
+				Usage: "convert naddr/hex",
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name: "relay",
+					},
+					&cli.StringFlag{
+						Name: "author",
+					},
+				},
+				Action: ConvertAddr,
 			},
 		},
 	}
